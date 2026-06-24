@@ -1,0 +1,9 @@
+tissue,cell_type,cell_ontology_id,markers,source,evidence
+PBMC,CD4+ T cell,CL:0000624,"IL7R, LTB, IL32, CCR7, MAL",Example,"Canonical helper T cell marker genes"
+PBMC,CD8+ T cell,CL:0000625,"CD8A, CD8B, GZMK, NKG7, CCL5",Example,"Cytotoxic T cell marker genes"
+PBMC,NK cell,CL:0000623,"NKG7, GNLY, PRF1, KLRD1, FCGR3A",Example,"Natural killer cell marker genes"
+PBMC,B cell,CL:0000236,"MS4A1, CD79A, CD79B, BANK1, CD74",Example,"B lineage marker genes"
+PBMC,Classical monocyte,CL:0000860,"LYZ, S100A8, S100A9, LST1, FCN1",Example,"Classical monocyte marker genes"
+Lung,Alveolar macrophage,CL:0000583,"MARCO, FABP4, PPARG, MRC1, APOE",Example,"Tissue-resident lung macrophage marker genes"
+Pancreas,Beta cell,CL:0000169,"INS, IAPP, PDX1, MAFA, PCSK1",Example,"Insulin-producing endocrine cell marker genes"
+Brain,Astrocyte,CL:0000127,"GFAP, AQP4, ALDH1L1, SLC1A3, GJA1",Example,"Glial astrocyte marker genes"

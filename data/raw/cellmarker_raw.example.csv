@@ -1,0 +1,11 @@
+tissueType,cellName,CellOntologyID,geneSymbol,speciesType,PMID
+PBMC,CD4+ T cell,CL:0000624,IL7R,Human,CellMarker-example
+PBMC,CD4+ T cell,CL:0000624,LTB,Human,CellMarker-example
+PBMC,CD4+ T cell,CL:0000624,IL32,Human,CellMarker-example
+PBMC,B cell,CL:0000236,MS4A1,Human,CellMarker-example
+PBMC,B cell,CL:0000236,CD79A,Human,CellMarker-example
+PBMC,B cell,CL:0000236,CD79B,Human,CellMarker-example
+PBMC,NK cell,CL:0000623,NKG7,Human,CellMarker-example
+PBMC,NK cell,CL:0000623,GNLY,Human,CellMarker-example
+PBMC,NK cell,CL:0000623,PRF1,Human,CellMarker-example
+PBMC,CD4+ T cell,CL:0000624,Il7r,Mouse,Filtered-example

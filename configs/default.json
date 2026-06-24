@@ -1,0 +1,57 @@
+{
+  "project_name": "DeepSeekCell-FT",
+  "seed": 13,
+  "dataset": {
+    "marker_evidence_csv": "data/raw/marker_evidence.example.csv",
+    "output_jsonl": "data/processed/instructions.jsonl",
+    "format": "chat",
+    "examples_per_record": 32,
+    "min_markers": 3,
+    "max_markers": 8
+  },
+  "models": [
+    {
+      "name": "deepseek-7b-ft",
+      "type": "lora",
+      "base_model": "deepseek-ai/deepseek-llm-7b-chat"
+    },
+    {
+      "name": "deepseek-7b-prompt-only",
+      "type": "prompt_only",
+      "base_model": "deepseek-ai/deepseek-llm-7b-chat"
+    },
+    {
+      "name": "llama-3-8b-ft",
+      "type": "lora",
+      "base_model": "meta-llama/Meta-Llama-3-8B-Instruct"
+    },
+    {
+      "name": "qwen-7b-ft",
+      "type": "lora",
+      "base_model": "Qwen/Qwen2.5-7B-Instruct"
+    },
+    {
+      "name": "marker-overlap",
+      "type": "baseline"
+    },
+    {
+      "name": "singleR",
+      "type": "external_baseline"
+    },
+    {
+      "name": "scType",
+      "type": "external_baseline"
+    }
+  ],
+  "evaluation": {
+    "metrics": [
+      "accuracy",
+      "macro_f1",
+      "cell_ontology_accuracy",
+      "expected_calibration_error",
+      "runtime_seconds",
+      "cost_usd"
+    ],
+    "confidence_bins": 10
+  }
+}

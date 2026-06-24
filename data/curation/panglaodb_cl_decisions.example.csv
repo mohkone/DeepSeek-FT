@@ -1,0 +1,87 @@
+cell_type,rank,cl_id,accepted_label,notes
+Bergmann glia,1,,,reviewed example: exact CL label is Bergmann glial cell
+Airway smooth muscle cells,1,,,reviewed manually
+Anterior pituitary gland cells,1,,,reviewed manually
+Interneurons,1,CL:0000099,interneuron,Accepted broad CL term; PanglaoDB label is plural.
+Neurons,1,CL:0000540,neuron,Accepted broad neuron class.
+Endothelial cells,1,CL:0000115,endothelial cell,Accepted broad endothelial cell class.
+Fibroblasts,1,CL:0000057,fibroblast,Accepted broad fibroblast class.
+Germ cells,1,CL:0000586,germ cell,Accepted broad germ cell class.
+Mast cells,1,CL:0000097,mast cell,Accepted broad mast cell class.
+Hepatocytes,1,CL:0000182,hepatocyte,Accepted exact liver parenchymal cell label.
+Enterocytes,1,CL:0000584,enterocyte,Accepted intestinal absorptive epithelial cell label.
+Macrophages,1,CL:0000235,macrophage,Accepted broad macrophage class.
+Epithelial cells,1,CL:0000066,epithelial cell,Accepted broad epithelial cell class.
+Olfactory epithelial cells,,,,Uncertain: PanglaoDB label may mean olfactory sensory neurons or olfactory epithelial support/basal cells; do not force a single CL mapping without tissue/marker review.
+Dendritic cells,1,CL:0000451,dendritic cell,Accepted broad dendritic cell class.
+Platelets,1,CL:0000233,platelet,Accepted platelet/thrombocyte mapping.
+Adipocytes,1,CL:0000136,adipocyte,Accepted broad adipocyte class.
+B cells,1,CL:0000236,B cell,Accepted broad B lymphocyte class.
+T cells,1,CL:0000084,T cell,Accepted broad T lymphocyte class.
+Cardiomyocytes,1,CL:0000746,cardiac muscle cell,Accepted cardiomyocyte/cardiac muscle cell mapping.
+Monocytes,1,CL:0000576,monocyte,Accepted broad monocyte class.
+NK cells,1,CL:0000623,natural killer cell,Accepted NK cell mapping.
+Endothelial cells (aorta),1,CL:0002543,aortic endothelial cell,Accepted tissue-specific endothelial mapping.
+Podocytes,1,CL:0000653,podocyte,Accepted kidney podocyte mapping.
+Myocytes,,,,"Uncertain: PanglaoDB label is broad and may refer to skeletal, smooth, or cardiac muscle cells depending on organ; do not force a subtype."
+Oligodendrocytes,1,CL:0000128,oligodendrocyte,Accepted CNS glial cell mapping.
+Hematopoietic stem cells,1,CL:0000037,hematopoietic stem cell,Accepted HSC mapping.
+Plasma cells,1,CL:0000786,plasma cell,Accepted antibody-secreting B lineage cell mapping.
+Embryonic stem cells,1,CL:0002322,embryonic stem cell,Accepted pluripotent embryonic stem cell mapping.
+Proximal tubule cells,1,CL:0002306,epithelial cell of proximal tubule,Accepted kidney proximal tubule epithelial mapping.
+Smooth muscle cells,1,CL:0000192,smooth muscle cell,Accepted broad smooth muscle cell mapping.
+Cajal-Retzius cells,1,CL:0000695,Cajal-Retzius cell,Accepted cortical neuron subtype mapping.
+Basophils,1,CL:0000767,basophil,Accepted granulocyte mapping.
+Erythroid-like and erythroid precursor cells,,,,Uncertain mixed PanglaoDB label; possible erythroid progenitor/precursor mapping should be reviewed with markers before accepting.
+Microglia,1,CL:0000129,microglial cell,Accepted CNS resident macrophage mapping.
+Neutrophils,1,CL:0000775,neutrophil,Accepted granulocyte mapping.
+Sertoli cells,1,CL:0000216,Sertoli cell,Accepted testis supporting cell mapping.
+Retinal ganglion cells,1,CL:0000740,retinal ganglion cell,Accepted retinal neuron mapping.
+B cells naive,1,CL:0000788,naive B cell,Accepted naive B cell mapping.
+Enteric neurons,1,CL:0007011,enteric neuron,Accepted enteric nervous system neuron mapping.
+B cells memory,1,CL:0000787,memory B cell,Accepted memory B cell mapping.
+Gamma delta T cells,1,CL:0000798,gamma-delta T cell,Accepted gamma-delta T lymphocyte mapping.
+Pericytes,1,CL:0000669,pericyte cell,Accepted vascular mural cell mapping.
+Osteoblasts,1,CL:0000062,osteoblast,Accepted bone-forming cell mapping.
+T memory cells,1,CL:0000813,memory T cell,Accepted broad memory T cell mapping.
+Astrocytes,1,CL:0000127,astrocyte,Accepted CNS glial cell mapping.
+T helper cells,1,CL:0000912,helper T cell,Accepted broad helper T cell mapping.
+Purkinje neurons,1,CL:0000121,Purkinje cell,Accepted cerebellar Purkinje neuron mapping.
+Ependymal cells,1,CL:0000065,ependymal cell,Accepted ventricular/canal epithelial glial mapping.
+Mesothelial cells,1,CL:0000077,mesothelial cell,Accepted mesothelial cell mapping.
+Neural stem/precursor cells,,,,Uncertain mixed label: could represent neural stem cell or neural progenitor cell; review source markers before selecting one CL term.
+Plasmacytoid dendritic cells,1,CL:0000784,plasmacytoid dendritic cell,Accepted pDC mapping.
+Mesangial cells,1,CL:0000650,mesangial cell,Accepted kidney glomerular mesangial cell mapping.
+Choroid plexus cells,1,CL:0000706,choroid plexus epithelial cell,Reviewed test priority with TTR AQP1 KL markers supporting choroid plexus epithelial identity.
+Follicular cells,2,CL:0002258,thyroid follicular cell,Reviewed Thyroid context with TG TPO TSHR markers; use thyroid follicular cell not follicular B cell.
+Foveolar cells,1,CL:0002179,foveolar cell of stomach,Reviewed GI tract context with MUC5AC TFF1 GKN1 markers.
+Kidney progenitor cells,,CL:0000383,nephrogenic mesenchyme stem cell,Reviewed kidney progenitor markers SIX2 CITED1 PAX2 WT1 consistent with nephrogenic mesenchyme.
+Loop of Henle cells,1,CL:1000909,kidney loop of Henle epithelial cell,Reviewed kidney tubule markers UMOD SLC12A1 CLDN16 support loop of Henle epithelial identity.
+Osteoclast precursor cells,,,,Uncertain because CL map lacks a precise osteoclast precursor term; do not force broad precursor cell.
+Satellite glial cells,1,CL:0000125,glial cell,Reviewed broad glial mapping because CL map lacks a specific satellite glial cell term.
+Undefined placental cells,,,,Uncertain broad PanglaoDB placental label; markers do not justify a single placental epithelial or trophoblast subtype.
+Airway goblet cells,3,CL:0002370,respiratory tract goblet cell,Reviewed lung context with MUC5AC MUC5B SPDEF markers.
+Glutaminergic neurons,1,CL:0000679,glutamatergic neuron,Reviewed neurotransmitter marker set SLC17A6 SLC17A7 SLC17A8.
+Oxyphil cells,,CL:0002199,oxyphil cell of parathyroid gland,Reviewed parathyroid gland context; use parathyroid oxyphil cell over generic oncocyte.
+Red pulp macrophages,1,CL:0000874,splenic red pulp macrophage,Reviewed red pulp macrophage label with HMOX1 SPIC VCAM1 macrophage markers.
+Satellite cells,2,CL:0000594,skeletal muscle satellite cell,Reviewed skeletal muscle context with PAX7 MYF5 MYOD1 markers; use skeletal muscle not perineuronal satellite cell.
+Oligodendrocyte progenitor cells,,CL:0002453,oligodendrocyte precursor cell,Reviewed brain context with PDGFRA SOX10 OLIG1 OLIG2 markers supporting OPC identity.
+Radial glia cells,,CL:0000681,radial glial cell,Reviewed brain context with PAX6 SLC1A3 GFAP HES5 markers.
+Enteric glia cells,,CL:4040002,enteroglial cell,Reviewed GI tract context with SOX10 GFAP S100B MPZ markers.
+His bundle cells,,CL:0010005,atrioventricular bundle cell,Reviewed cardiac conduction context with GJA5 GJC1 KCNK3 markers.
+Purkinje fiber cells,,CL:0002068,Purkinje myocyte,Reviewed cardiac conduction context with GJA5 GJC1 NEFM markers.
+Myeloid-derived suppressor cells,,CL:0000889,myeloid suppressor cell,Reviewed immune context with ITGAM CD33 S100A8 S100A9 markers.
+Natural killer T cells,,CL:0000814,mature NK T cell,Reviewed immune context with ZBTB16 KLRB1 GZMB PRF1 markers.
+Distal tubule cells,,CL:0002305,epithelial cell of distal tubule,Reviewed kidney context with SLC12A3 CLDN8 PVALB TRPM6 markers.
+Juxtaglomerular cells,,CL:1000618,juxtaglomerular complex cell,Reviewed kidney context with REN-associated smooth muscle marker set.
+Principal cells,,CL:0005009,renal principal cell,Reviewed kidney collecting duct context with AQP2 AQP3 SCNN1A AVPR2 markers.
+Luminal epithelial cells,,CL:0002326,luminal epithelial cell of mammary gland,Reviewed mammary gland context with KRT8 KRT18 KRT19 MUC1 ESR1 markers.
+Beta cells,,CL:0000169,type B pancreatic cell,Reviewed pancreas context with INS IAPP PDX1 SLC30A8 markers.
+Delta cells,,CL:0000173,pancreatic D cell,Reviewed pancreas context with SST HHEX PDX1 marker set.
+Ductal cells,,CL:0002079,pancreatic ductal cell,Reviewed pancreas context with CFTR KRT19 KRT7 MUC1 markers.
+Epsilon cells,,CL:0005019,pancreatic epsilon cell,Reviewed pancreas context with GHRL ARX NKX2-2 markers.
+Pancreatic progenitor cells,,CL:0002351,progenitor cell of endocrine pancreas,Reviewed pancreas context with PDX1 NEUROG3 SOX9 NKX2-2 markers.
+Spermatozoa,,CL:0000019,sperm,Reviewed reproductive context with LDHC HSPA2 ODF1 markers.
+Myofibroblasts,,CL:0000186,myofibroblast cell,Reviewed smooth muscle context with ACTA2 TAGLN MYL9 DES markers.
+Pulmonary vascular smooth muscle cells,,CL:0000359,vascular associated smooth muscle cell,Reviewed pulmonary vascular smooth muscle label and ANGPT1 PDGFRB markers.
+Salivary mucous cells,,CL:4052066,mucous acinar cell of salivary gland,Reviewed oral cavity context with salivary mucous label and MUCL1 PIP KRT markers.
