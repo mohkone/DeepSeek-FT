@@ -13,9 +13,9 @@ single-cell workflows require optional dependencies.
 
 ## Citation and Archive
 
-A GitHub release and Zenodo archive DOI should be created before manuscript
-submission. Insert the final DOI here and in
-`manuscript/deepseekcell_ft_article.md` once the archive is minted.
+[![DOI](https://zenodo.org/badge/1279602640.svg)](https://doi.org/10.5281/zenodo.20837447)
+
+Archived release DOI: [10.5281/zenodo.20837447](https://doi.org/10.5281/zenodo.20837447).
 
 ## Research Question
 

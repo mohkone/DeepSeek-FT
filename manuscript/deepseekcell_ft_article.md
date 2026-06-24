@@ -522,11 +522,10 @@ interpretation than as standalone open-ended cell type annotators.
 
 The code, configuration files, benchmark scripts, generated prediction files,
 summary tables, supplementary label-support table, and figure-generation
-scripts are available in the accompanying DeepSeekCell-FT repository. A GitHub
-release and Zenodo archive DOI should be inserted here before journal
-submission. Public input resources are available from PanglaoDB, Cell Ontology,
-10x Genomics PBMC3k, Scanpy tutorial data, and UCSC Cell Browser as cited in
-the References.
+scripts are available in the accompanying DeepSeekCell-FT repository and
+archived on Zenodo at doi:10.5281/zenodo.20837447. Public input resources are
+available from PanglaoDB, Cell Ontology, 10x Genomics PBMC3k, Scanpy tutorial
+data, and UCSC Cell Browser as cited in the References.
 
 ## Competing Interests
 
