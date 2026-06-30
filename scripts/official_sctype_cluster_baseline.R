@@ -60,15 +60,61 @@ export_h5ad <- function(adata_path, export_dir) {
   }
 }
 
-download_if_missing <- function(url, output, force = FALSE) {
-  if (force || !file.exists(output)) {
+valid_cached_file <- function(path) {
+  file.exists(path) && !is.na(file.info(path)$size) && file.info(path)$size > 0
+}
+
+download_if_missing <- function(urls, output, force = FALSE, retries = 3) {
+  if (force || !valid_cached_file(output)) {
     dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
-    download.file(url, output, mode = "wb", quiet = TRUE)
+    if (file.exists(output)) {
+      unlink(output)
+    }
+    last_error <- NULL
+    for (attempt in seq_len(retries)) {
+      for (url in urls) {
+        message(sprintf("Downloading official scType source: %s", url))
+        try_result <- tryCatch(
+          {
+            download.file(url, output, mode = "wb", quiet = TRUE, method = "auto")
+            TRUE
+          },
+          error = function(error) {
+            last_error <<- conditionMessage(error)
+            FALSE
+          },
+          warning = function(warning) {
+            last_error <<- conditionMessage(warning)
+            FALSE
+          }
+        )
+        if (isTRUE(try_result) && valid_cached_file(output)) {
+          return(output)
+        }
+        if (file.exists(output)) {
+          unlink(output)
+        }
+      }
+      Sys.sleep(min(10, attempt * 2))
+    }
+    stop(
+      sprintf(
+        paste(
+          "failed to download official scType source to %s after %d retries;",
+          "preseed this file in --source-dir or retry with a working GitHub connection;",
+          "last error: %s"
+        ),
+        output,
+        retries,
+        ifelse(is.null(last_error), "unknown", last_error)
+      ),
+      call. = FALSE
+    )
   }
   output
 }
 
-prepare_official_sctype_sources <- function(source_dir, force_download = FALSE) {
+prepare_official_sctype_sources <- function(source_dir, force_download = FALSE, retries = 3) {
   source_dir <- normalizePath(source_dir, mustWork = FALSE)
   dir.create(source_dir, recursive = TRUE, showWarnings = FALSE)
   files <- list(
@@ -76,22 +122,24 @@ prepare_official_sctype_sources <- function(source_dir, force_download = FALSE) 
     sctype_score = file.path(source_dir, "sctype_score_.R"),
     database = file.path(source_dir, "ScTypeDB_full.xlsx")
   )
+  raw_base <- "https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/master"
+  github_raw_base <- "https://github.com/IanevskiAleksandr/sc-type/raw/master"
   urls <- list(
-    gene_sets_prepare = paste0(
-      "https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/",
-      "master/R/gene_sets_prepare.R"
+    gene_sets_prepare = c(
+      paste0(raw_base, "/R/gene_sets_prepare.R"),
+      paste0(github_raw_base, "/R/gene_sets_prepare.R")
     ),
-    sctype_score = paste0(
-      "https://raw.githubusercontent.com/IanevskiAleksandr/sc-type/",
-      "master/R/sctype_score_.R"
+    sctype_score = c(
+      paste0(raw_base, "/R/sctype_score_.R"),
+      paste0(github_raw_base, "/R/sctype_score_.R")
     ),
-    database = paste0(
-      "https://github.com/IanevskiAleksandr/sc-type/raw/",
-      "master/ScTypeDB_full.xlsx"
+    database = c(
+      paste0(github_raw_base, "/ScTypeDB_full.xlsx"),
+      paste0(raw_base, "/ScTypeDB_full.xlsx")
     )
   )
   for (name in names(files)) {
-    download_if_missing(urls[[name]], files[[name]], force = force_download)
+    download_if_missing(urls[[name]], files[[name]], force = force_download, retries = retries)
   }
   files
 }
@@ -149,6 +197,9 @@ ontology_key <- if (!is.null(args[["ontology-key"]])) args[["ontology-key"]] els
 source_dir <- if (!is.null(args[["source-dir"]])) args[["source-dir"]] else file.path("data", "external", "sctype")
 export_dir <- if (!is.null(args[["export-dir"]])) args[["export-dir"]] else tempfile("sctype-h5ad-export-")
 force_download <- isTRUE(args[["force-download"]])
+download_timeout <- as.integer(Sys.getenv("SCTYPE_DOWNLOAD_TIMEOUT", unset = "600"))
+download_retries <- as.integer(Sys.getenv("SCTYPE_DOWNLOAD_RETRIES", unset = "3"))
+options(timeout = max(getOption("timeout"), download_timeout))
 
 for (pkg in c("Matrix", "jsonlite", "openxlsx", "HGNChelper", "scales")) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
@@ -156,7 +207,11 @@ for (pkg in c("Matrix", "jsonlite", "openxlsx", "HGNChelper", "scales")) {
   }
 }
 
-official_sources <- prepare_official_sctype_sources(source_dir, force_download = force_download)
+official_sources <- prepare_official_sctype_sources(
+  source_dir,
+  force_download = force_download,
+  retries = download_retries
+)
 source(official_sources$gene_sets_prepare, local = TRUE)
 source(official_sources$sctype_score, local = TRUE)
 

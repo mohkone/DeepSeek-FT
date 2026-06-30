@@ -289,8 +289,18 @@ Then run the three matrix-derived scType baselines together and refresh the
 comparison tables:
 
 ```bash
+tar -tzf ../pbmc3k-full-comparison-results.tar.gz >/dev/null
+tar -tzf ../baron-pancreas-full-comparison-results.tar.gz >/dev/null
+tar -tzf ../zeisel-brain-full-comparison-results.tar.gz >/dev/null
+
 bash scripts/run_matrix_sctype_baselines.sh
 ```
+
+If any `tar -tzf` command reports `Unexpected EOF`, the archive is truncated and
+must be uploaded again or regenerated on AutoDL before extraction. The official
+scType wrapper uses a longer GitHub download timeout by default; if the
+connection is still slow, set `SCTYPE_DOWNLOAD_TIMEOUT=1200` and
+`SCTYPE_DOWNLOAD_RETRIES=5`.
 
 The included wrapper exports the same `.h5ad` to Matrix Market plus metadata,
 runs cluster-level SingleR in R, and writes JSONL compatible with
