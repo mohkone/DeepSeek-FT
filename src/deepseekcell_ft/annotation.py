@@ -6,6 +6,7 @@ import re
 import time
 from collections import Counter
 from collections.abc import Sequence
+from math import sqrt
 
 from .normalization import normalize_cell_label, normalize_cl_id, parse_marker_list
 from .prompts import SYSTEM_PROMPT, build_user_prompt
@@ -205,6 +206,177 @@ class MarkerOverlapAnnotator:
             cell_ontology_id=best["cell_ontology_id"],
             confidence=confidence,
             reasoning=reasoning,
+            runtime_seconds=time.perf_counter() - start,
+        )
+
+
+NEGATIVE_MARKER_COLUMNS = (
+    "negative_markers",
+    "negative_marker_genes",
+    "negative_marker",
+    "negative_genes",
+    "neg_markers",
+    "neg_marker_genes",
+    "minus_markers",
+    "exclude_markers",
+)
+
+
+def _negative_markers(record: MarkerRecord) -> tuple[str, ...]:
+    """Read optional negative markers from marker-record metadata."""
+
+    for column in NEGATIVE_MARKER_COLUMNS:
+        value = record.metadata.get(column)
+        if value:
+            return parse_marker_list(str(value))
+    return ()
+
+
+class ScTypeAnnotator:
+    """A scType-style positive/negative marker-set scoring baseline."""
+
+    def __init__(
+        self,
+        records: Sequence[MarkerRecord],
+        negative_weight: float = 1.0,
+    ):
+        if not records:
+            raise ValueError("records must not be empty")
+        if negative_weight < 0:
+            raise ValueError("negative_weight must be non-negative")
+        self.records = list(records)
+        self.negative_weight = negative_weight
+        marker_counts = Counter()
+        for record in self.records:
+            marker_counts.update(set(record.markers))
+            marker_counts.update(set(_negative_markers(record)))
+        self.marker_weights = {
+            marker: 1.0 / count
+            for marker, count in marker_counts.items()
+            if count > 0
+        }
+
+    def rank_candidates(
+        self,
+        tissue: str,
+        markers: str | Sequence[str],
+        top_k: int = 5,
+    ) -> list[dict[str, object]]:
+        """Return top scType-style marker-set candidates as dictionaries."""
+
+        query_markers = set(parse_marker_list(markers))
+        if not query_markers:
+            return []
+
+        tissue_norm = tissue.strip().lower()
+        candidates = [
+            record for record in self.records if record.tissue.strip().lower() == tissue_norm
+        ] or self.records
+
+        scored: list[tuple[float, int, int, MarkerRecord, set[str], set[str]]] = []
+        for record in candidates:
+            positive_markers = set(record.markers)
+            negative_markers = set(_negative_markers(record))
+            positive_overlap = query_markers & positive_markers
+            negative_overlap = query_markers & negative_markers
+
+            positive_score = sum(
+                self.marker_weights.get(marker, 1.0) for marker in positive_overlap
+            ) / sqrt(max(len(positive_markers), 1))
+            negative_score = sum(
+                self.marker_weights.get(marker, 1.0) for marker in negative_overlap
+            ) / sqrt(max(len(negative_markers), 1))
+            score = positive_score - (self.negative_weight * negative_score)
+            scored.append(
+                (
+                    score,
+                    len(positive_overlap),
+                    len(negative_overlap),
+                    record,
+                    positive_overlap,
+                    negative_overlap,
+                )
+            )
+
+        scored.sort(
+            key=lambda item: (
+                item[0],
+                item[1],
+                -item[2],
+                normalize_cell_label(item[3].cell_type),
+            ),
+            reverse=True,
+        )
+        ranked: list[dict[str, object]] = []
+        seen: set[tuple[str, str | None]] = set()
+        for (
+            score,
+            positive_count,
+            negative_count,
+            record,
+            positive_overlap,
+            negative_overlap,
+        ) in scored:
+            key = (normalize_cell_label(record.cell_type), record.cell_ontology_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            ranked.append(
+                {
+                    "rank": len(ranked) + 1,
+                    "cell_type": record.cell_type,
+                    "cell_ontology_id": record.cell_ontology_id,
+                    "sctype_score": score,
+                    "positive_overlap_count": positive_count,
+                    "negative_overlap_count": negative_count,
+                    "positive_overlap": sorted(positive_overlap),
+                    "negative_overlap": sorted(negative_overlap),
+                    "record_markers": list(record.markers),
+                    "negative_markers": list(_negative_markers(record)),
+                }
+            )
+            if len(ranked) >= top_k:
+                break
+        return ranked
+
+    def predict(self, tissue: str, markers: str | Sequence[str]) -> AnnotationPrediction:
+        start = time.perf_counter()
+        ranked = self.rank_candidates(tissue, markers, top_k=2)
+        if not ranked:
+            return AnnotationPrediction(
+                cell_type="Unknown",
+                confidence=0.0,
+                reasoning="No marker genes were provided.",
+                runtime_seconds=time.perf_counter() - start,
+            )
+
+        best = ranked[0]
+        best_score = float(best["sctype_score"])
+        second_score = float(ranked[1]["sctype_score"]) if len(ranked) > 1 else 0.0
+        confidence = min(1.0, max(0.0, best_score + max(0.0, best_score - second_score)))
+        positive_overlap = best["positive_overlap"]
+        negative_overlap = best["negative_overlap"]
+        positive_text = ", ".join(positive_overlap) if positive_overlap else "no positive overlap"
+        negative_text = ", ".join(negative_overlap) if negative_overlap else "no negative overlap"
+        reasoning = (
+            f"Best scType-style score for {best['cell_type']}: "
+            f"positive markers {positive_text}; negative markers {negative_text}. "
+            f"Score {best_score:.3f}."
+        )
+        if best_score <= 0.0:
+            return AnnotationPrediction(
+                cell_type="Unknown",
+                confidence=0.0,
+                reasoning=reasoning,
+                raw_response=f"scType-style score: {best_score:.6f}",
+                runtime_seconds=time.perf_counter() - start,
+            )
+        return AnnotationPrediction(
+            cell_type=str(best["cell_type"]),
+            cell_ontology_id=best["cell_ontology_id"],
+            confidence=confidence,
+            reasoning=reasoning,
+            raw_response=f"scType-style score: {best_score:.6f}",
             runtime_seconds=time.perf_counter() - start,
         )
 

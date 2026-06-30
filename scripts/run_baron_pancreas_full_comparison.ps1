@@ -8,6 +8,7 @@ param(
   [string]$SingleRReference = "hpca",
   [switch]$SkipPrepare,
   [switch]$SkipSingleR,
+  [switch]$SkipScType,
   [switch]$RunPrompt,
   [string]$PromptModel = ""
 )
@@ -30,6 +31,7 @@ try {
   $markerOutput = "outputs/$Tag.matrix_marker_overlap.jsonl"
   $rerankOutput = "outputs/$Tag.deepseek_lora_rerank.jsonl"
   $singleROutput = "outputs/$Tag.singler.jsonl"
+  $scTypeOutput = "outputs/$Tag.sctype.jsonl"
   $promptOutput = "outputs/$Tag.prompt.jsonl"
   $promptMappedOutput = "outputs/$Tag.prompt.mapped.jsonl"
 
@@ -46,6 +48,15 @@ try {
     "Marker overlap=$markerOutput",
     "DeepSeek LoRA rerank=$rerankOutput"
   )
+
+  if (-not $SkipScType) {
+    python -m deepseekcell_ft.cli benchmark-sctype `
+      --marker-db $markerDb `
+      --input $instructions `
+      --output $scTypeOutput
+    if ($LASTEXITCODE -ne 0) { throw "benchmark-sctype failed" }
+    $predictions += "scType=$scTypeOutput"
+  }
 
   if (-not $SkipSingleR) {
     & Rscript scripts/singler_cluster_baseline.R `

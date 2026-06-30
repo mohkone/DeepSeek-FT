@@ -9,11 +9,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from deepseekcell_ft.benchmark import run_annotation_benchmark, run_marker_overlap_benchmark
+from deepseekcell_ft.benchmark import (
+    run_annotation_benchmark,
+    run_marker_overlap_benchmark,
+    run_sctype_benchmark,
+)
 from deepseekcell_ft.dataset_builder import generate_examples, load_marker_records, write_jsonl
 from deepseekcell_ft.schemas import AnnotationPrediction
 from deepseekcell_ft.annotation import (
     MarkerOverlapAnnotator,
+    ScTypeAnnotator,
     build_candidate_rerank_prompt,
     choose_candidate_from_response,
 )
@@ -40,6 +45,36 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(candidates[0]["cell_type"], "CD4+ T cell")
         self.assertEqual(candidates[0]["rank"], 1)
         self.assertIn("IL7R", candidates[0]["overlap"])
+
+    def test_sctype_predicts_from_positive_marker_score(self) -> None:
+        marker_db = ROOT / "data" / "raw" / "marker_evidence.example.csv"
+        annotator = ScTypeAnnotator(load_marker_records(marker_db))
+        prediction = annotator.predict("PBMC", ["IL7R", "LTB", "IL32"])
+
+        self.assertEqual(prediction.cell_type, "CD4+ T cell")
+        self.assertEqual(prediction.cell_ontology_id, "CL:0000624")
+        self.assertIn("scType-style score", prediction.raw_response or "")
+
+    def test_sctype_negative_markers_penalize_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            marker_db = Path(tmpdir) / "markers.csv"
+            marker_db.write_text(
+                "\n".join(
+                    [
+                        "tissue,cell_type,cell_ontology_id,markers,negative_markers",
+                        'PBMC,Target cell,CL:0000001,"GENEA, GENEB",GENEX',
+                        'PBMC,Distractor cell,CL:0000002,"GENEA, GENEX",GENEB',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            annotator = ScTypeAnnotator(load_marker_records(marker_db))
+            candidates = annotator.rank_candidates("PBMC", ["GENEA", "GENEB"], top_k=2)
+
+        self.assertEqual(candidates[0]["cell_type"], "Target cell")
+        self.assertEqual(candidates[1]["cell_type"], "Distractor cell")
+        self.assertIn("GENEB", candidates[1]["negative_overlap"])
 
     def test_candidate_rerank_response_uses_candidate_number(self) -> None:
         candidates = [
@@ -95,6 +130,22 @@ class BenchmarkTests(unittest.TestCase):
             output_path = Path(tmpdir) / "predictions.jsonl"
             write_jsonl(examples, input_path)
             predictions = run_marker_overlap_benchmark(marker_db, input_path, output_path)
+            lines = output_path.read_text(encoding="utf-8").splitlines()
+
+        self.assertEqual(len(predictions), 2)
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(json.loads(lines[0])["y_pred"], "CD4+ T cell")
+
+    def test_sctype_benchmark_writes_predictions(self) -> None:
+        marker_db = ROOT / "data" / "raw" / "marker_evidence.example.csv"
+        records = load_marker_records(marker_db)
+        examples = generate_examples(records[:1], examples_per_record=2, seed=11)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            input_path = Path(tmpdir) / "input.jsonl"
+            output_path = Path(tmpdir) / "predictions.jsonl"
+            write_jsonl(examples, input_path)
+            predictions = run_sctype_benchmark(marker_db, input_path, output_path)
             lines = output_path.read_text(encoding="utf-8").splitlines()
 
         self.assertEqual(len(predictions), 2)

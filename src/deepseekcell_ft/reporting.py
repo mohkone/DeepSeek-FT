@@ -37,6 +37,8 @@ def _round_metric(value: Any) -> Any:
 
 def _infer_method(name: str, path: Path) -> str:
     text = f"{name} {path}".lower()
+    if "sctype" in text:
+        return "scType"
     if "singler" in text:
         return "SingleR"
     if "rerank" in text:

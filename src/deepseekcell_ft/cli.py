@@ -13,6 +13,7 @@ from .benchmark import (
     run_lora_candidate_rerank_benchmark,
     run_marker_overlap_benchmark,
     run_prompt_benchmark,
+    run_sctype_benchmark,
 )
 from .dataset_builder import (
     generate_examples,
@@ -340,6 +341,19 @@ def sync_prediction_gold_ontology_command(args: argparse.Namespace) -> int:
 
 def benchmark_marker_overlap_command(args: argparse.Namespace) -> int:
     predictions = run_marker_overlap_benchmark(args.marker_db, args.input, args.output)
+    metrics = evaluate_predictions(predictions, confidence_bins=args.confidence_bins)
+    print(f"Wrote {len(predictions)} predictions to {args.output}")
+    print(json.dumps(metrics, indent=2, sort_keys=True, ensure_ascii=True))
+    return 0
+
+
+def benchmark_sctype_command(args: argparse.Namespace) -> int:
+    predictions = run_sctype_benchmark(
+        args.marker_db,
+        args.input,
+        args.output,
+        negative_weight=args.negative_weight,
+    )
     metrics = evaluate_predictions(predictions, confidence_bins=args.confidence_bins)
     print(f"Wrote {len(predictions)} predictions to {args.output}")
     print(json.dumps(metrics, indent=2, sort_keys=True, ensure_ascii=True))
@@ -758,6 +772,22 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark.add_argument("--output", required=True, type=Path)
     benchmark.add_argument("--confidence-bins", type=int, default=10)
     benchmark.set_defaults(func=benchmark_marker_overlap_command)
+
+    sctype_benchmark = subparsers.add_parser(
+        "benchmark-sctype",
+        help="Run scType-style positive/negative marker-set scoring on an instruction split",
+    )
+    sctype_benchmark.add_argument("--marker-db", required=True, type=Path)
+    sctype_benchmark.add_argument("--input", required=True, type=Path)
+    sctype_benchmark.add_argument("--output", required=True, type=Path)
+    sctype_benchmark.add_argument(
+        "--negative-weight",
+        type=float,
+        default=1.0,
+        help="Penalty weight for query markers present in a candidate's negative marker set",
+    )
+    sctype_benchmark.add_argument("--confidence-bins", type=int, default=10)
+    sctype_benchmark.set_defaults(func=benchmark_sctype_command)
 
     prompt_benchmark = subparsers.add_parser(
         "benchmark-prompt",

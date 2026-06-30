@@ -263,7 +263,8 @@ After the LoRA adapter is available, generate the PBMC3k comparison table:
 
 This writes `outputs/pbmc3k.comparison.md`,
 `outputs/pbmc3k.comparison.csv`, and `outputs/pbmc3k.comparison.json` with
-marker-overlap, DeepSeek LoRA rerank, SingleR, and optional prompt-only metrics.
+marker-overlap, DeepSeek LoRA rerank, scType, SingleR, and optional
+prompt-only metrics.
 
 For a second matrix-derived pancreas benchmark, run Baron pancreas:
 
@@ -300,6 +301,13 @@ datasets on AutoDL:
 ```bash
 bash scripts/setup_singler_conda_autodl.sh
 bash scripts/run_matrix_singler_baselines.sh
+```
+
+To add the in-repository scType-style positive/negative marker-set baseline for
+all three matrix-derived datasets:
+
+```bash
+bash scripts/run_matrix_sctype_baselines.sh
 ```
 
 ## Optional Training Dependencies

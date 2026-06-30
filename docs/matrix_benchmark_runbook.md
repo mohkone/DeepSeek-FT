@@ -85,6 +85,7 @@ This runs the same PBMC3k-derived instruction file through:
 
 - Marker overlap
 - DeepSeek LoRA candidate reranking
+- scType-style marker-set scoring
 - SingleR
 - Optional prompt-only inference when `RUN_PROMPT=1` or `-RunPrompt` is used
 
@@ -245,7 +246,25 @@ python -m deepseekcell_ft.cli benchmark-lora-rerank \
   --top-k 5
 ```
 
-## 8. Run SingleR
+## 8. Run scType And SingleR
+
+The in-repository scType-style baseline scores each candidate cell type by
+positive marker overlap and optional negative marker penalties from columns such
+as `negative_markers`. It does not require R:
+
+```bash
+python -m deepseekcell_ft.cli benchmark-sctype \
+  --marker-db data/raw/pbmc3k.matrix_markers.csv \
+  --input data/processed/pbmc3k.matrix.instructions.jsonl \
+  --output outputs/pbmc3k.sctype.jsonl
+```
+
+To run the three matrix-derived scType baselines together and refresh the
+comparison tables:
+
+```bash
+bash scripts/run_matrix_sctype_baselines.sh
+```
 
 The included wrapper exports the same `.h5ad` to Matrix Market plus metadata,
 runs cluster-level SingleR in R, and writes JSONL compatible with

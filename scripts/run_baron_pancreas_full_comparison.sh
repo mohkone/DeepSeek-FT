@@ -14,6 +14,7 @@ N_TOP="${N_TOP:-25}"
 SINGLER_REFERENCE="${SINGLER_REFERENCE:-hpca}"
 SKIP_PREPARE="${SKIP_PREPARE:-0}"
 SKIP_SINGLER="${SKIP_SINGLER:-0}"
+SKIP_SCTYPE="${SKIP_SCTYPE:-0}"
 RUN_PROMPT="${RUN_PROMPT:-0}"
 PROMPT_MODEL="${PROMPT_MODEL:-$BASE_MODEL}"
 
@@ -25,6 +26,7 @@ instructions="data/processed/${TAG}.matrix.instructions.jsonl"
 marker_output="outputs/${TAG}.matrix_marker_overlap.jsonl"
 rerank_output="outputs/${TAG}.deepseek_lora_rerank.jsonl"
 singler_output="outputs/${TAG}.singler.jsonl"
+sctype_output="outputs/${TAG}.sctype.jsonl"
 prompt_output="outputs/${TAG}.prompt.jsonl"
 prompt_mapped_output="outputs/${TAG}.prompt.mapped.jsonl"
 
@@ -40,6 +42,14 @@ prediction_specs=(
   "Marker overlap=$marker_output"
   "DeepSeek LoRA rerank=$rerank_output"
 )
+
+if [[ "$SKIP_SCTYPE" != "1" ]]; then
+  python -m deepseekcell_ft.cli benchmark-sctype \
+    --marker-db "$marker_db" \
+    --input "$instructions" \
+    --output "$sctype_output"
+  prediction_specs+=("scType=$sctype_output")
+fi
 
 if [[ "$SKIP_SINGLER" != "1" ]]; then
   Rscript scripts/singler_cluster_baseline.R \

@@ -7,7 +7,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from deepseekcell_ft.cli import benchmark_prompt_command, build_parser, reparse_predictions_command
+from deepseekcell_ft.cli import (
+    benchmark_prompt_command,
+    benchmark_sctype_command,
+    build_parser,
+    reparse_predictions_command,
+)
 
 
 class CliTests(unittest.TestCase):
@@ -28,6 +33,24 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.func, benchmark_prompt_command)
         self.assertEqual(args.max_new_tokens, 128)
         self.assertEqual(args.temperature, 0.0)
+
+    def test_benchmark_sctype_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "benchmark-sctype",
+                "--marker-db",
+                "data/raw/marker_evidence.example.csv",
+                "--input",
+                "data/processed/test.jsonl",
+                "--output",
+                "outputs/sctype_predictions.jsonl",
+            ]
+        )
+
+        self.assertEqual(args.func, benchmark_sctype_command)
+        self.assertEqual(args.negative_weight, 1.0)
+        self.assertEqual(args.confidence_bins, 10)
 
     def test_reparse_predictions_parser(self) -> None:
         parser = build_parser()

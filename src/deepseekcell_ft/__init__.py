@@ -1,6 +1,6 @@
 """DeepSeekCell-FT research scaffold."""
 
-from .annotation import MarkerOverlapAnnotator, parse_annotation_response
+from .annotation import MarkerOverlapAnnotator, ScTypeAnnotator, parse_annotation_response
 from .dataset_builder import generate_examples, load_marker_records, write_jsonl
 from .evaluation import evaluate_predictions
 from .schemas import AnnotationExample, AnnotationPrediction, MarkerRecord
@@ -17,6 +17,7 @@ __all__ = [
     "MarkerOverlapAnnotator",
     "MarkerTableConfig",
     "MarkerRecord",
+    "ScTypeAnnotator",
     "evaluate_predictions",
     "generate_examples",
     "load_marker_records",

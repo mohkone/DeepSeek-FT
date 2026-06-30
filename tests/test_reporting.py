@@ -70,6 +70,7 @@ class ReportingTests(unittest.TestCase):
                     f"deepseek_lora={predictions}",
                     f"qwen25_7b_prompt={predictions}",
                     f"pbmc3k_matrix_singler={predictions}",
+                    f"pbmc3k_matrix_sctype={predictions}",
                 ],
                 preflight_specs=[f"label_overlap={preflight}"],
                 output_json=output_json,
@@ -82,6 +83,7 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(summary["predictions"][0]["method"], "DeepSeek-7B LoRA")
         self.assertEqual(summary["predictions"][1]["method"], "Prompt-only Qwen")
         self.assertEqual(summary["predictions"][2]["method"], "SingleR")
+        self.assertEqual(summary["predictions"][3]["method"], "scType")
         self.assertEqual(summary["preflights"][0]["records"], 3)
         self.assertTrue(output_json_exists)
         self.assertTrue(output_markdown_exists)
