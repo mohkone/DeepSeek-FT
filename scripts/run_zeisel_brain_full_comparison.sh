@@ -12,6 +12,7 @@ ADAPTER="${ADAPTER:-models/deepseekcell-ft-lora-label-overlap}"
 TOP_K="${TOP_K:-5}"
 N_TOP="${N_TOP:-25}"
 SINGLER_REFERENCE="${SINGLER_REFERENCE:-mouse_rna_seq}"
+SCTYPE_TISSUE="${SCTYPE_TISSUE:-Brain}"
 SKIP_PREPARE="${SKIP_PREPARE:-0}"
 SKIP_SINGLER="${SKIP_SINGLER:-0}"
 SKIP_SCTYPE="${SKIP_SCTYPE:-0}"
@@ -26,6 +27,7 @@ instructions="data/processed/${TAG}.matrix.instructions.jsonl"
 marker_output="outputs/${TAG}.matrix_marker_overlap.jsonl"
 rerank_output="outputs/${TAG}.deepseek_lora_rerank.jsonl"
 singler_output="outputs/${TAG}.singler.jsonl"
+sctype_raw_output="outputs/${TAG}.sctype.raw.jsonl"
 sctype_output="outputs/${TAG}.sctype.jsonl"
 prompt_output="outputs/${TAG}.prompt.jsonl"
 prompt_mapped_output="outputs/${TAG}.prompt.mapped.jsonl"
@@ -44,9 +46,17 @@ prediction_specs=(
 )
 
 if [[ "$SKIP_SCTYPE" != "1" ]]; then
-  python -m deepseekcell_ft.cli benchmark-sctype \
+  Rscript scripts/official_sctype_cluster_baseline.R \
+    --adata "$ADATA" \
+    --cluster-key cell_type \
+    --label-key cell_type \
+    --ontology-key cell_ontology_id \
+    --tissue Brain \
+    --sctype-tissue "$SCTYPE_TISSUE" \
+    --output "$sctype_raw_output"
+  python -m deepseekcell_ft.cli map-prediction-ontology \
+    --predictions "$sctype_raw_output" \
     --marker-db "$marker_db" \
-    --input "$instructions" \
     --output "$sctype_output"
   prediction_specs+=("scType=$sctype_output")
 fi

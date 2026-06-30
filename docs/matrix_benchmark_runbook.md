@@ -32,6 +32,13 @@ conda-forge and bioconda when `Rscript` is not already available:
 bash scripts/setup_singler_conda_autodl.sh
 ```
 
+For official scType, install the lighter R stack used by
+`scripts/official_sctype_cluster_baseline.R`:
+
+```bash
+bash scripts/setup_sctype_conda_autodl.sh
+```
+
 ## 2. Run PBMC3k First
 
 PBMC3k is the best first matrix benchmark because reviewers recognize it. The
@@ -76,6 +83,7 @@ PowerShell:
 Bash/AutoDL:
 
 ```bash
+bash scripts/setup_sctype_conda_autodl.sh
 BASE_MODEL=/root/autodl-tmp/models/deepseek-llm-7b-chat \
 ADAPTER=models/deepseekcell-ft-lora-label-overlap \
 bash scripts/run_pbmc3k_full_comparison.sh
@@ -85,7 +93,7 @@ This runs the same PBMC3k-derived instruction file through:
 
 - Marker overlap
 - DeepSeek LoRA candidate reranking
-- scType-style marker-set scoring
+- official scType
 - SingleR
 - Optional prompt-only inference when `RUN_PROMPT=1` or `-RunPrompt` is used
 
@@ -174,6 +182,7 @@ outputs/baron_pancreas.matrix_marker_overlap.jsonl
 After the LoRA adapter is available on AutoDL, run:
 
 ```bash
+bash scripts/setup_sctype_conda_autodl.sh
 SKIP_SINGLER=1 \
 BASE_MODEL=/root/autodl-tmp/models/deepseek-llm-7b-chat \
 ADAPTER=models/deepseekcell-ft-lora-label-overlap \
@@ -218,6 +227,7 @@ outputs/zeisel_brain.matrix_marker_overlap.jsonl
 After the LoRA adapter is available on AutoDL, run:
 
 ```bash
+bash scripts/setup_sctype_conda_autodl.sh
 SKIP_SINGLER=1 \
 BASE_MODEL=/root/autodl-tmp/models/deepseek-llm-7b-chat \
 ADAPTER=models/deepseekcell-ft-lora-label-overlap \
@@ -246,20 +256,36 @@ python -m deepseekcell_ft.cli benchmark-lora-rerank \
   --top-k 5
 ```
 
-## 8. Run scType And SingleR
+## 8. Run Official scType And SingleR
 
-The in-repository scType-style baseline scores each candidate cell type by
-positive marker overlap and optional negative marker penalties from columns such
-as `negative_markers`. It does not require R:
+The reviewer-facing scType baseline uses the official
+`IanevskiAleksandr/sc-type` R source files and `ScTypeDB_full.xlsx`, cached under
+`data/external/sctype` by default. It scores cluster-averaged expression from the
+same matrix used to extract markers:
 
 ```bash
-python -m deepseekcell_ft.cli benchmark-sctype \
+Rscript scripts/official_sctype_cluster_baseline.R \
+  --adata data/matrix/pbmc3k_tutorial_labeled.h5ad \
+  --cluster-key cell_type \
+  --label-key cell_type \
+  --ontology-key cell_ontology_id \
+  --tissue PBMC \
+  --sctype-tissue "Immune system" \
+  --output outputs/pbmc3k.sctype.raw.jsonl
+
+python -m deepseekcell_ft.cli map-prediction-ontology \
+  --predictions outputs/pbmc3k.sctype.raw.jsonl \
   --marker-db data/raw/pbmc3k.matrix_markers.csv \
-  --input data/processed/pbmc3k.matrix.instructions.jsonl \
   --output outputs/pbmc3k.sctype.jsonl
 ```
 
-To run the three matrix-derived scType baselines together and refresh the
+To install the R dependencies, run:
+
+```bash
+bash scripts/setup_sctype_conda_autodl.sh
+```
+
+Then run the three matrix-derived scType baselines together and refresh the
 comparison tables:
 
 ```bash

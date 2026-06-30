@@ -11,7 +11,7 @@ from .annotation import (
     LoraAdapterAnnotator,
     MarkerOverlapAnnotator,
     PromptOnlyCausalLMAnnotator,
-    ScTypeAnnotator,
+    ScTypeStyleAnnotator,
 )
 from .dataset_builder import load_marker_records, read_jsonl
 
@@ -80,7 +80,7 @@ def run_marker_overlap_benchmark(
     return run_annotation_benchmark(annotator, input_jsonl, output_jsonl)
 
 
-def run_sctype_benchmark(
+def run_sctype_style_benchmark(
     marker_db_path: str | Path,
     input_jsonl: str | Path,
     output_jsonl: str | Path,
@@ -88,7 +88,7 @@ def run_sctype_benchmark(
 ) -> list[dict[str, Any]]:
     """Run the scType-style marker-set baseline over an instruction JSONL split."""
 
-    annotator = ScTypeAnnotator(
+    annotator = ScTypeStyleAnnotator(
         load_marker_records(marker_db_path),
         negative_weight=negative_weight,
     )

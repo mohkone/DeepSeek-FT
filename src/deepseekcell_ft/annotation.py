@@ -232,7 +232,7 @@ def _negative_markers(record: MarkerRecord) -> tuple[str, ...]:
     return ()
 
 
-class ScTypeAnnotator:
+class ScTypeStyleAnnotator:
     """A scType-style positive/negative marker-set scoring baseline."""
 
     def __init__(

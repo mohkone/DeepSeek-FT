@@ -275,6 +275,7 @@ For a second matrix-derived pancreas benchmark, run Baron pancreas:
 On AutoDL, after the base model and LoRA adapter are available:
 
 ```bash
+bash scripts/setup_sctype_conda_autodl.sh
 SKIP_SINGLER=1 \
 BASE_MODEL=/root/autodl-tmp/models/deepseek-llm-7b-chat \
 bash scripts/run_baron_pancreas_full_comparison.sh
@@ -290,6 +291,7 @@ For a mouse brain matrix-derived validation dataset using the UCSC Cell Browser 
 On AutoDL:
 
 ```bash
+bash scripts/setup_sctype_conda_autodl.sh
 SKIP_SINGLER=1 \
 BASE_MODEL=/root/autodl-tmp/models/deepseek-llm-7b-chat \
 bash scripts/run_zeisel_brain_full_comparison.sh
@@ -303,10 +305,10 @@ bash scripts/setup_singler_conda_autodl.sh
 bash scripts/run_matrix_singler_baselines.sh
 ```
 
-To add the in-repository scType-style positive/negative marker-set baseline for
-all three matrix-derived datasets:
+To add the official scType baseline for all three matrix-derived datasets:
 
 ```bash
+bash scripts/setup_sctype_conda_autodl.sh
 bash scripts/run_matrix_sctype_baselines.sh
 ```
 

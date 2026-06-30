@@ -9,7 +9,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from deepseekcell_ft.cli import (
     benchmark_prompt_command,
-    benchmark_sctype_command,
+    benchmark_sctype_style_command,
     build_parser,
     reparse_predictions_command,
 )
@@ -34,11 +34,11 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.max_new_tokens, 128)
         self.assertEqual(args.temperature, 0.0)
 
-    def test_benchmark_sctype_parser(self) -> None:
+    def test_benchmark_sctype_style_parser(self) -> None:
         parser = build_parser()
         args = parser.parse_args(
             [
-                "benchmark-sctype",
+                "benchmark-sctype-style",
                 "--marker-db",
                 "data/raw/marker_evidence.example.csv",
                 "--input",
@@ -48,7 +48,7 @@ class CliTests(unittest.TestCase):
             ]
         )
 
-        self.assertEqual(args.func, benchmark_sctype_command)
+        self.assertEqual(args.func, benchmark_sctype_style_command)
         self.assertEqual(args.negative_weight, 1.0)
         self.assertEqual(args.confidence_bins, 10)
 

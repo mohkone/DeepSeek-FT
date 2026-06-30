@@ -6,6 +6,7 @@ param(
   [int]$TopK = 5,
   [int]$NTop = 25,
   [string]$SingleRReference = "hpca",
+  [string]$ScTypeTissue = "Pancreas",
   [switch]$SkipPrepare,
   [switch]$SkipSingleR,
   [switch]$SkipScType,
@@ -31,6 +32,7 @@ try {
   $markerOutput = "outputs/$Tag.matrix_marker_overlap.jsonl"
   $rerankOutput = "outputs/$Tag.deepseek_lora_rerank.jsonl"
   $singleROutput = "outputs/$Tag.singler.jsonl"
+  $scTypeRawOutput = "outputs/$Tag.sctype.raw.jsonl"
   $scTypeOutput = "outputs/$Tag.sctype.jsonl"
   $promptOutput = "outputs/$Tag.prompt.jsonl"
   $promptMappedOutput = "outputs/$Tag.prompt.mapped.jsonl"
@@ -50,11 +52,20 @@ try {
   )
 
   if (-not $SkipScType) {
-    python -m deepseekcell_ft.cli benchmark-sctype `
+    & Rscript scripts/official_sctype_cluster_baseline.R `
+      --adata $Adata `
+      --cluster-key cell_type `
+      --label-key cell_type `
+      --ontology-key cell_ontology_id `
+      --tissue Pancreas `
+      --sctype-tissue $ScTypeTissue `
+      --output $scTypeRawOutput
+    if ($LASTEXITCODE -ne 0) { throw "official scType baseline failed" }
+    python -m deepseekcell_ft.cli map-prediction-ontology `
+      --predictions $scTypeRawOutput `
       --marker-db $markerDb `
-      --input $instructions `
       --output $scTypeOutput
-    if ($LASTEXITCODE -ne 0) { throw "benchmark-sctype failed" }
+    if ($LASTEXITCODE -ne 0) { throw "map-prediction-ontology failed for scType output" }
     $predictions += "scType=$scTypeOutput"
   }
 

@@ -37,6 +37,8 @@ def _round_metric(value: Any) -> Any:
 
 def _infer_method(name: str, path: Path) -> str:
     text = f"{name} {path}".lower()
+    if "sctype-style" in text or "sctype_style" in text:
+        return "scType-style"
     if "sctype" in text:
         return "scType"
     if "singler" in text:

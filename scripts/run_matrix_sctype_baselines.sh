@@ -25,13 +25,32 @@ ensure_zeisel() {
 
 run_sctype() {
   local tag="$1"
+  local adata="$2"
+  local cluster_key="$3"
+  local label_key="$4"
+  local tissue="$5"
+  local sctype_tissue="$6"
   local marker_db="data/raw/${tag}.matrix_markers.csv"
-  local instructions="data/processed/${tag}.matrix.instructions.jsonl"
+  local raw_output="outputs/${tag}.sctype.raw.jsonl"
   local output="outputs/${tag}.sctype.jsonl"
 
-  python -m deepseekcell_ft.cli benchmark-sctype \
+  if ! command -v Rscript >/dev/null 2>&1; then
+    echo "Rscript not found. Run scripts/setup_sctype_conda_autodl.sh first." >&2
+    exit 1
+  fi
+
+  Rscript scripts/official_sctype_cluster_baseline.R \
+    --adata "$adata" \
+    --cluster-key "$cluster_key" \
+    --label-key "$label_key" \
+    --ontology-key cell_ontology_id \
+    --tissue "$tissue" \
+    --sctype-tissue "$sctype_tissue" \
+    --output "$raw_output"
+
+  python -m deepseekcell_ft.cli map-prediction-ontology \
+    --predictions "$raw_output" \
     --marker-db "$marker_db" \
-    --input "$instructions" \
     --output "$output"
 }
 
@@ -64,26 +83,29 @@ write_comparison_table() {
 mkdir -p outputs
 
 ensure_pbmc3k
-run_sctype pbmc3k
+run_sctype pbmc3k data/matrix/pbmc3k_tutorial_labeled.h5ad cell_type cell_type PBMC "Immune system"
 write_comparison_table pbmc3k
 
 ensure_baron
-run_sctype baron_pancreas
+run_sctype baron_pancreas data/matrix/baron_pancreas_labeled.h5ad cell_type cell_type Pancreas Pancreas
 write_comparison_table baron_pancreas
 
 ensure_zeisel
-run_sctype zeisel_brain
+run_sctype zeisel_brain data/matrix/zeisel_brain_labeled.h5ad cell_type cell_type Brain Brain
 write_comparison_table zeisel_brain
 
 tar -czf sctype-matrix-baselines-results.tar.gz \
+  outputs/pbmc3k.sctype.raw.jsonl \
   outputs/pbmc3k.sctype.jsonl \
   outputs/pbmc3k.comparison.md \
   outputs/pbmc3k.comparison.csv \
   outputs/pbmc3k.comparison.json \
+  outputs/baron_pancreas.sctype.raw.jsonl \
   outputs/baron_pancreas.sctype.jsonl \
   outputs/baron_pancreas.comparison.md \
   outputs/baron_pancreas.comparison.csv \
   outputs/baron_pancreas.comparison.json \
+  outputs/zeisel_brain.sctype.raw.jsonl \
   outputs/zeisel_brain.sctype.jsonl \
   outputs/zeisel_brain.comparison.md \
   outputs/zeisel_brain.comparison.csv \
