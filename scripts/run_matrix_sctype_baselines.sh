@@ -9,17 +9,34 @@ ensure_pbmc3k() {
   if [[ ! -f data/raw/pbmc3k.matrix_markers.csv || ! -f data/processed/pbmc3k.matrix.instructions.jsonl ]]; then
     bash scripts/run_pbmc3k_matrix_benchmark.sh
   fi
+  require_matrix_inputs pbmc3k data/matrix/pbmc3k_tutorial_labeled.h5ad
 }
 
 ensure_baron() {
   if [[ ! -f data/raw/baron_pancreas.matrix_markers.csv || ! -f data/processed/baron_pancreas.matrix.instructions.jsonl ]]; then
     bash scripts/run_baron_pancreas_matrix_benchmark.sh
   fi
+  require_matrix_inputs baron_pancreas data/matrix/baron_pancreas_labeled.h5ad
 }
 
 ensure_zeisel() {
   if [[ ! -f data/raw/zeisel_brain.matrix_markers.csv || ! -f data/processed/zeisel_brain.matrix.instructions.jsonl ]]; then
     bash scripts/run_zeisel_brain_matrix_benchmark.sh
+  fi
+  require_matrix_inputs zeisel_brain data/matrix/zeisel_brain_labeled.h5ad
+}
+
+require_matrix_inputs() {
+  local tag="$1"
+  local adata="$2"
+  local missing=()
+  [[ -s "$adata" ]] || missing+=("$adata")
+  [[ -s "data/raw/${tag}.matrix_markers.csv" ]] || missing+=("data/raw/${tag}.matrix_markers.csv")
+  [[ -s "data/processed/${tag}.matrix.instructions.jsonl" ]] || missing+=("data/processed/${tag}.matrix.instructions.jsonl")
+  if (( ${#missing[@]} )); then
+    printf 'Missing required %s inputs. Restore a complete result tarball or regenerate the matrix benchmark:\n' "$tag" >&2
+    printf '  %s\n' "${missing[@]}" >&2
+    exit 1
   fi
 }
 

@@ -163,6 +163,12 @@ cluster_average_matrix <- function(matrix, clusters) {
 }
 
 normalize_and_scale <- function(matrix) {
+  matrix <- as.matrix(matrix)
+  if (any(matrix < 0, na.rm = TRUE)) {
+    matrix[is.na(matrix)] <- 0
+    matrix[is.infinite(matrix)] <- 0
+    return(matrix)
+  }
   lib_size <- colSums(matrix)
   lib_size[is.na(lib_size) | lib_size <= 0] <- 1
   normalized <- t(t(matrix) / lib_size) * 10000
@@ -206,6 +212,8 @@ for (pkg in c("Matrix", "jsonlite", "openxlsx", "HGNChelper", "scales")) {
     stop(sprintf("missing required R package: %s", pkg), call. = FALSE)
   }
 }
+checkGeneSymbols <- HGNChelper::checkGeneSymbols
+read.xlsx <- openxlsx::read.xlsx
 
 official_sources <- prepare_official_sctype_sources(
   source_dir,
