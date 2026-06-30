@@ -12,6 +12,7 @@ from typing import Any
 from .annotation import parse_annotation_response
 from .dataset_builder import load_marker_records, read_jsonl
 from .normalization import normalize_cell_label, normalize_cl_id
+from .ontology import label_variants
 
 
 def _safe_divide(numerator: float, denominator: float) -> float:
@@ -378,9 +379,9 @@ def map_prediction_ontology_ids(
     for marker_record in marker_records:
         if not marker_record.cell_ontology_id:
             continue
-        label = normalize_cell_label(marker_record.cell_type)
-        label_to_ids.setdefault(label, set()).add(marker_record.cell_ontology_id)
-        label_to_display.setdefault(label, marker_record.cell_type)
+        for label in label_variants(marker_record.cell_type):
+            label_to_ids.setdefault(label, set()).add(marker_record.cell_ontology_id)
+            label_to_display.setdefault(label, marker_record.cell_type)
 
     unambiguous = {
         label: next(iter(ids))
@@ -404,22 +405,32 @@ def map_prediction_ontology_ids(
         updated = dict(record)
         current_cl_id = normalize_cl_id(updated.get("pred_cl_id"))
         label = normalize_cell_label(str(updated.get("y_pred", "")))
+        matched_label = next(
+            (
+                candidate
+                for candidate in label_variants(str(updated.get("y_pred", "")))
+                if candidate in unambiguous or candidate in ambiguous_labels
+            ),
+            label,
+        )
         updated.setdefault("original_pred_cl_id", current_cl_id)
 
         if preserve_existing and current_cl_id:
             preserved += 1
-        elif label in unambiguous:
-            mapped_cl_id = unambiguous[label]
+        elif matched_label in unambiguous:
+            mapped_cl_id = unambiguous[matched_label]
             if current_cl_id and current_cl_id != mapped_cl_id:
                 overwritten += 1
             updated["pred_cl_id"] = mapped_cl_id
             updated["pred_cl_id_source"] = "marker_db_label_map"
-            updated["pred_cl_label_match"] = label_to_display[label]
+            updated["pred_cl_label_match"] = label_to_display[matched_label]
+            updated["pred_cl_label_variant"] = matched_label
             mapped += 1
-        elif label in ambiguous_labels:
+        elif matched_label in ambiguous_labels:
             ambiguous += 1
             updated["pred_cl_id_source"] = "ambiguous_marker_db_label_map"
-            updated["pred_cl_id_candidates"] = ambiguous_labels[label]
+            updated["pred_cl_id_candidates"] = ambiguous_labels[matched_label]
+            updated["pred_cl_label_variant"] = matched_label
         else:
             unmapped += 1
             updated["pred_cl_id_source"] = "unmapped_predicted_label"

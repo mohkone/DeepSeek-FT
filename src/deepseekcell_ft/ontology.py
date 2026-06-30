@@ -239,6 +239,7 @@ def label_variants(label: str) -> list[str]:
 
     add(base)
     add(PARENTHETICAL_RE.sub(" ", base))
+    add(base.replace("+", " "))
 
     for candidate in list(variants):
         tokens = candidate.split()
@@ -260,8 +261,11 @@ def label_variants(label: str) -> list[str]:
             add(" ".join([*middle, tokens[0], "cell"]))
 
     curated = {
+        "dc": ["dendritic cells", "dendritic cell"],
+        "dcs": ["dendritic cells", "dendritic cell"],
+        "dendritic cells": ["DC"],
         "nk cell": ["natural killer cell"],
-        "nk cells": ["natural killer cell"],
+        "nk cells": ["natural killer cell", "natural killer cells"],
         "microglia": ["microglial cell"],
         "hematopoietic stem cells": ["hematopoietic stem cell"],
         "erythroid like and erythroid precursor cells": ["erythroid progenitor cell"],

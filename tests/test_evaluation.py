@@ -137,6 +137,94 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(mapped["original_pred_cl_id"], "CL:0000624")
         self.assertEqual(mapped["pred_cl_id"], "CL:0000236")
 
+    def test_map_prediction_ontology_ids_uses_conservative_label_variants(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            marker_db = tmpdir_path / "markers.csv"
+            predictions = tmpdir_path / "predictions.jsonl"
+            output = tmpdir_path / "mapped.jsonl"
+
+            marker_db.write_text(
+                "\n".join(
+                    [
+                        "tissue,cell_type,cell_ontology_id,markers,source,evidence",
+                        'PBMC,CD4 T cells,CL:0000624,"CD3D,IL7R",Example,canonical',
+                        'PBMC,Dendritic cells,CL:0000451,"FCER1A,CST3",Example,canonical',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            predictions.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "y_true": "CD4 T cells",
+                                "y_pred": "CD4+ T-cells",
+                                "true_cl_id": "CL:0000624",
+                                "pred_cl_id": None,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "y_true": "Dendritic cells",
+                                "y_pred": "DC",
+                                "true_cl_id": "CL:0000451",
+                                "pred_cl_id": None,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            summary = map_prediction_ontology_ids(predictions, marker_db, output)
+            mapped = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual(summary["mapped"], 2)
+        self.assertEqual(summary["after_cell_ontology_accuracy"], 1.0)
+        self.assertEqual(mapped[0]["pred_cl_id"], "CL:0000624")
+        self.assertEqual(mapped[1]["pred_cl_id"], "CL:0000451")
+
+    def test_map_prediction_ontology_ids_does_not_broaden_ambiguous_labels(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            marker_db = tmpdir_path / "markers.csv"
+            predictions = tmpdir_path / "predictions.jsonl"
+            output = tmpdir_path / "mapped.jsonl"
+
+            marker_db.write_text(
+                "\n".join(
+                    [
+                        "tissue,cell_type,cell_ontology_id,markers,source,evidence",
+                        'PBMC,CD14+ Monocytes,CL:0001054,"LYZ,LST1",Example,canonical',
+                        'PBMC,FCGR3A+ Monocytes,CL:0002396,"FCGR3A,MS4A7",Example,canonical',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            predictions.write_text(
+                json.dumps(
+                    {
+                        "y_true": "CD14+ Monocytes",
+                        "y_pred": "Monocytes",
+                        "true_cl_id": "CL:0001054",
+                        "pred_cl_id": None,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            summary = map_prediction_ontology_ids(predictions, marker_db, output)
+            mapped = json.loads(output.read_text(encoding="utf-8").splitlines()[0])
+
+        self.assertEqual(summary["mapped"], 0)
+        self.assertEqual(summary["unmapped"], 1)
+        self.assertIsNone(mapped.get("pred_cl_id"))
+        self.assertEqual(mapped["pred_cl_id_source"], "unmapped_predicted_label")
+
     def test_reparse_prediction_records_updates_raw_response_fields(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
