@@ -20,6 +20,15 @@ SKIP_SCTYPE="${SKIP_SCTYPE:-0}"
 RUN_PROMPT="${RUN_PROMPT:-0}"
 PROMPT_MODEL="${PROMPT_MODEL:-$BASE_MODEL}"
 
+is_enabled() {
+  case "${1,,}" in
+    1|true|yes|y) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+echo "Baron pancreas full comparison: SKIP_RERANK=${SKIP_RERANK} SKIP_SCTYPE=${SKIP_SCTYPE} SKIP_SINGLER=${SKIP_SINGLER} RUN_PROMPT=${RUN_PROMPT}" >&2
+
 SKIP_PREPARE="$SKIP_PREPARE" ADATA="$ADATA" TAG="$TAG" N_TOP="$N_TOP" \
   bash scripts/run_baron_pancreas_matrix_benchmark.sh
 
@@ -37,7 +46,7 @@ prediction_specs=(
   "Marker overlap=$marker_output"
 )
 
-if [[ "$SKIP_RERANK" != "1" ]]; then
+if ! is_enabled "$SKIP_RERANK"; then
   python -m deepseekcell_ft.cli benchmark-lora-rerank \
     --marker-db "$marker_db" \
     --base-model "$BASE_MODEL" \
@@ -48,7 +57,7 @@ if [[ "$SKIP_RERANK" != "1" ]]; then
   prediction_specs+=("DeepSeek LoRA rerank=$rerank_output")
 fi
 
-if [[ "$SKIP_SCTYPE" != "1" ]]; then
+if ! is_enabled "$SKIP_SCTYPE"; then
   Rscript scripts/official_sctype_cluster_baseline.R \
     --adata "$ADATA" \
     --cluster-key cell_type \
@@ -64,7 +73,7 @@ if [[ "$SKIP_SCTYPE" != "1" ]]; then
   prediction_specs+=("scType=$sctype_output")
 fi
 
-if [[ "$SKIP_SINGLER" != "1" ]]; then
+if ! is_enabled "$SKIP_SINGLER"; then
   Rscript scripts/singler_cluster_baseline.R \
     --adata "$ADATA" \
     --cluster-key cell_type \
