@@ -98,34 +98,41 @@ write_comparison_table() {
 }
 
 mkdir -p outputs
+DATASETS="${DATASETS:-pbmc3k baron_pancreas zeisel_brain}"
 
-ensure_pbmc3k
-run_sctype pbmc3k data/matrix/pbmc3k_tutorial_labeled.h5ad cell_type cell_type PBMC "Immune system"
-write_comparison_table pbmc3k
+if [[ " $DATASETS " == *" pbmc3k "* ]]; then
+  ensure_pbmc3k
+  run_sctype pbmc3k data/matrix/pbmc3k_tutorial_labeled.h5ad cell_type cell_type PBMC "Immune system"
+  write_comparison_table pbmc3k
+fi
 
-ensure_baron
-run_sctype baron_pancreas data/matrix/baron_pancreas_labeled.h5ad cell_type cell_type Pancreas Pancreas
-write_comparison_table baron_pancreas
+if [[ " $DATASETS " == *" baron_pancreas "* ]]; then
+  ensure_baron
+  run_sctype baron_pancreas data/matrix/baron_pancreas_labeled.h5ad cell_type cell_type Pancreas Pancreas
+  write_comparison_table baron_pancreas
+fi
 
-ensure_zeisel
-run_sctype zeisel_brain data/matrix/zeisel_brain_labeled.h5ad cell_type cell_type Brain Brain
-write_comparison_table zeisel_brain
+if [[ " $DATASETS " == *" zeisel_brain "* ]]; then
+  ensure_zeisel
+  run_sctype zeisel_brain data/matrix/zeisel_brain_labeled.h5ad cell_type cell_type Brain Brain
+  write_comparison_table zeisel_brain
+fi
 
-tar -czf sctype-matrix-baselines-results.tar.gz \
-  outputs/pbmc3k.sctype.raw.jsonl \
-  outputs/pbmc3k.sctype.jsonl \
-  outputs/pbmc3k.comparison.md \
-  outputs/pbmc3k.comparison.csv \
-  outputs/pbmc3k.comparison.json \
-  outputs/baron_pancreas.sctype.raw.jsonl \
-  outputs/baron_pancreas.sctype.jsonl \
-  outputs/baron_pancreas.comparison.md \
-  outputs/baron_pancreas.comparison.csv \
-  outputs/baron_pancreas.comparison.json \
-  outputs/zeisel_brain.sctype.raw.jsonl \
-  outputs/zeisel_brain.sctype.jsonl \
-  outputs/zeisel_brain.comparison.md \
-  outputs/zeisel_brain.comparison.csv \
-  outputs/zeisel_brain.comparison.json
+tar_paths=()
+for tag in pbmc3k baron_pancreas zeisel_brain; do
+  for path in \
+    "outputs/${tag}.sctype.raw.jsonl" \
+    "outputs/${tag}.sctype.jsonl" \
+    "outputs/${tag}.comparison.md" \
+    "outputs/${tag}.comparison.csv" \
+    "outputs/${tag}.comparison.json"; do
+    [[ -f "$path" ]] && tar_paths+=("$path")
+  done
+done
 
-echo "Wrote sctype-matrix-baselines-results.tar.gz"
+if (( ${#tar_paths[@]} )); then
+  tar -czf sctype-matrix-baselines-results.tar.gz "${tar_paths[@]}"
+  echo "Wrote sctype-matrix-baselines-results.tar.gz"
+else
+  echo "No scType output files were produced; skipping result archive." >&2
+fi

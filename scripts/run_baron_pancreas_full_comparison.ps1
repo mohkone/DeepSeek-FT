@@ -8,6 +8,7 @@ param(
   [string]$SingleRReference = "hpca",
   [string]$ScTypeTissue = "Pancreas",
   [switch]$SkipPrepare,
+  [switch]$SkipRerank,
   [switch]$SkipSingleR,
   [switch]$SkipScType,
   [switch]$RunPrompt,
@@ -37,19 +38,21 @@ try {
   $promptOutput = "outputs/$Tag.prompt.jsonl"
   $promptMappedOutput = "outputs/$Tag.prompt.mapped.jsonl"
 
-  python -m deepseekcell_ft.cli benchmark-lora-rerank `
-    --marker-db $markerDb `
-    --base-model $BaseModel `
-    --adapter $Adapter `
-    --input $instructions `
-    --output $rerankOutput `
-    --top-k $TopK
-  if ($LASTEXITCODE -ne 0) { throw "benchmark-lora-rerank failed" }
-
   $predictions = @(
-    "Marker overlap=$markerOutput",
-    "DeepSeek LoRA rerank=$rerankOutput"
+    "Marker overlap=$markerOutput"
   )
+
+  if (-not $SkipRerank) {
+    python -m deepseekcell_ft.cli benchmark-lora-rerank `
+      --marker-db $markerDb `
+      --base-model $BaseModel `
+      --adapter $Adapter `
+      --input $instructions `
+      --output $rerankOutput `
+      --top-k $TopK
+    if ($LASTEXITCODE -ne 0) { throw "benchmark-lora-rerank failed" }
+    $predictions += "DeepSeek LoRA rerank=$rerankOutput"
+  }
 
   if (-not $SkipScType) {
     & Rscript scripts/official_sctype_cluster_baseline.R `

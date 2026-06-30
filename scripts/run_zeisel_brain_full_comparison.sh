@@ -14,6 +14,7 @@ N_TOP="${N_TOP:-25}"
 SINGLER_REFERENCE="${SINGLER_REFERENCE:-mouse_rna_seq}"
 SCTYPE_TISSUE="${SCTYPE_TISSUE:-Brain}"
 SKIP_PREPARE="${SKIP_PREPARE:-0}"
+SKIP_RERANK="${SKIP_RERANK:-0}"
 SKIP_SINGLER="${SKIP_SINGLER:-0}"
 SKIP_SCTYPE="${SKIP_SCTYPE:-0}"
 RUN_PROMPT="${RUN_PROMPT:-0}"
@@ -32,18 +33,20 @@ sctype_output="outputs/${TAG}.sctype.jsonl"
 prompt_output="outputs/${TAG}.prompt.jsonl"
 prompt_mapped_output="outputs/${TAG}.prompt.mapped.jsonl"
 
-python -m deepseekcell_ft.cli benchmark-lora-rerank \
-  --marker-db "$marker_db" \
-  --base-model "$BASE_MODEL" \
-  --adapter "$ADAPTER" \
-  --input "$instructions" \
-  --output "$rerank_output" \
-  --top-k "$TOP_K"
-
 prediction_specs=(
   "Marker overlap=$marker_output"
-  "DeepSeek LoRA rerank=$rerank_output"
 )
+
+if [[ "$SKIP_RERANK" != "1" ]]; then
+  python -m deepseekcell_ft.cli benchmark-lora-rerank \
+    --marker-db "$marker_db" \
+    --base-model "$BASE_MODEL" \
+    --adapter "$ADAPTER" \
+    --input "$instructions" \
+    --output "$rerank_output" \
+    --top-k "$TOP_K"
+  prediction_specs+=("DeepSeek LoRA rerank=$rerank_output")
+fi
 
 if [[ "$SKIP_SCTYPE" != "1" ]]; then
   Rscript scripts/official_sctype_cluster_baseline.R \
