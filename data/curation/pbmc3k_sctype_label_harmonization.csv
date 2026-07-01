@@ -1,0 +1,6 @@
+predicted_label,harmonized_label,harmonized_cl_id,notes
+Naive CD4+ T cells,CD4 T cells,CL:0000624,scType subtype mapped to PBMC3k tutorial parent label
+Naive B cells,B cells,CL:0000236,scType subtype mapped to PBMC3k tutorial parent label
+Classical Monocytes,CD14+ Monocytes,CL:0001054,scType monocyte subtype mapped to PBMC3k tutorial monocyte label
+Non-classical monocytes,FCGR3A+ Monocytes,CL:0002396,scType monocyte subtype mapped to PBMC3k tutorial monocyte label
+Myeloid Dendritic cells,Dendritic cells,CL:0000451,scType dendritic subtype mapped to PBMC3k tutorial parent label

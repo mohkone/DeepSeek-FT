@@ -463,6 +463,164 @@ def map_prediction_ontology_ids(
     }
 
 
+def _unambiguous_marker_label_to_cl_id(marker_db_path: str | Path) -> dict[str, str]:
+    marker_records = load_marker_records(marker_db_path)
+    label_to_ids: dict[str, set[str]] = {}
+    for marker_record in marker_records:
+        if not marker_record.cell_ontology_id:
+            continue
+        for label in label_variants(marker_record.cell_type):
+            label_to_ids.setdefault(label, set()).add(marker_record.cell_ontology_id)
+    return {
+        label: next(iter(ids))
+        for label, ids in label_to_ids.items()
+        if len(ids) == 1
+    }
+
+
+def _load_label_harmonization_rows(path: str | Path) -> dict[str, dict[str, str]]:
+    mapping: dict[str, dict[str, str]] = {}
+    with Path(path).open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for line_number, row in enumerate(reader, start=2):
+            source_label = (
+                row.get("predicted_label")
+                or row.get("source_label")
+                or row.get("y_pred")
+                or ""
+            ).strip()
+            target_label = (
+                row.get("harmonized_label")
+                or row.get("target_label")
+                or row.get("cell_type")
+                or ""
+            ).strip()
+            if not source_label or not target_label:
+                raise ValueError(
+                    f"{path}:{line_number} requires predicted_label and harmonized_label"
+                )
+            target_cl_id = normalize_cl_id(
+                row.get("harmonized_cl_id")
+                or row.get("target_cl_id")
+                or row.get("cell_ontology_id")
+                or row.get("cl_id")
+            )
+            entry = {
+                "predicted_label": source_label,
+                "harmonized_label": target_label,
+                "harmonized_cl_id": target_cl_id or "",
+                "notes": (row.get("notes") or "").strip(),
+            }
+            for variant in label_variants(source_label):
+                existing = mapping.get(variant)
+                if existing and existing["harmonized_label"] != target_label:
+                    raise ValueError(
+                        f"{path}:{line_number} duplicate predicted-label mapping: "
+                        f"{source_label!r}"
+                    )
+                mapping[variant] = entry
+    return mapping
+
+
+def harmonize_prediction_labels(
+    predictions_path: str | Path,
+    mapping_path: str | Path,
+    output_path: str | Path,
+    marker_db_path: str | Path | None = None,
+) -> dict[str, Any]:
+    """Rewrite prediction labels from an explicit curation table."""
+
+    records = load_prediction_records(predictions_path)
+    mapping = _load_label_harmonization_rows(mapping_path)
+    marker_label_to_cl_id = (
+        _unambiguous_marker_label_to_cl_id(marker_db_path)
+        if marker_db_path
+        else {}
+    )
+
+    harmonized = 0
+    unchanged = 0
+    filled_cl_ids = 0
+    missing_cl_ids = 0
+    output_records: list[dict[str, Any]] = []
+
+    for record in records:
+        updated = dict(record)
+        original_label = str(updated.get("y_pred", ""))
+        entry = next(
+            (
+                mapping[variant]
+                for variant in label_variants(original_label)
+                if variant in mapping
+            ),
+            None,
+        )
+        if entry is None:
+            unchanged += 1
+            output_records.append(updated)
+            continue
+
+        harmonized += 1
+        original_cl_id = normalize_cl_id(updated.get("pred_cl_id"))
+        target_label = entry["harmonized_label"]
+        target_cl_id = normalize_cl_id(entry["harmonized_cl_id"])
+        if not target_cl_id and marker_label_to_cl_id:
+            target_cl_id = next(
+                (
+                    marker_label_to_cl_id[variant]
+                    for variant in label_variants(target_label)
+                    if variant in marker_label_to_cl_id
+                ),
+                None,
+            )
+        if target_cl_id:
+            filled_cl_ids += int(original_cl_id != target_cl_id)
+        else:
+            missing_cl_ids += 1
+
+        updated.setdefault("original_y_pred", original_label)
+        updated.setdefault("original_pred_cl_id", original_cl_id)
+        updated["y_pred"] = target_label
+        updated["pred_cl_id"] = target_cl_id
+        updated["label_harmonization_source"] = str(mapping_path)
+        updated["label_harmonization_predicted_label"] = entry["predicted_label"]
+        updated["pred_cl_id_source"] = (
+            "prediction_label_harmonization"
+            if target_cl_id
+            else "prediction_label_harmonization_label_only"
+        )
+        if entry["notes"]:
+            updated["label_harmonization_notes"] = entry["notes"]
+        output_records.append(updated)
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="\n") as handle:
+        for record in output_records:
+            handle.write(json.dumps(record, ensure_ascii=True) + "\n")
+
+    before_metrics = evaluate_predictions(records)
+    after_metrics = evaluate_predictions(output_records)
+    return {
+        "input": str(predictions_path),
+        "mapping": str(mapping_path),
+        "marker_db": str(marker_db_path) if marker_db_path else None,
+        "output": str(output_path),
+        "records": len(records),
+        "harmonized": harmonized,
+        "unchanged": unchanged,
+        "filled_cl_ids": filled_cl_ids,
+        "missing_cl_ids": missing_cl_ids,
+        "mapping_size": len(mapping),
+        "before_accuracy": before_metrics["accuracy"],
+        "after_accuracy": after_metrics["accuracy"],
+        "before_macro_f1": before_metrics["macro_f1"],
+        "after_macro_f1": after_metrics["macro_f1"],
+        "before_cell_ontology_accuracy": before_metrics["cell_ontology_accuracy"],
+        "after_cell_ontology_accuracy": after_metrics["cell_ontology_accuracy"],
+    }
+
+
 def _candidate_label(candidate: dict[str, Any] | None) -> str:
     if not candidate:
         return ""

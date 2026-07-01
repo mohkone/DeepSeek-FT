@@ -50,6 +50,8 @@ run_sctype() {
   local marker_db="data/raw/${tag}.matrix_markers.csv"
   local raw_output="outputs/${tag}.sctype.raw.jsonl"
   local output="outputs/${tag}.sctype.jsonl"
+  local harmonized_output="outputs/${tag}.sctype.harmonized.jsonl"
+  local harmonization="data/curation/${tag}_sctype_label_harmonization.csv"
 
   if ! command -v Rscript >/dev/null 2>&1; then
     echo "Rscript not found. Run scripts/setup_sctype_conda_autodl.sh first." >&2
@@ -69,6 +71,14 @@ run_sctype() {
     --predictions "$raw_output" \
     --marker-db "$marker_db" \
     --output "$output"
+
+  if [[ -f "$harmonization" ]]; then
+    python -m deepseekcell_ft.cli harmonize-prediction-labels \
+      --predictions "$output" \
+      --mapping "$harmonization" \
+      --marker-db "$marker_db" \
+      --output "$harmonized_output"
+  fi
 }
 
 write_comparison_table() {
@@ -76,6 +86,7 @@ write_comparison_table() {
   local marker_output="outputs/${tag}.matrix_marker_overlap.jsonl"
   local rerank_output="outputs/${tag}.deepseek_lora_rerank.jsonl"
   local sctype_output="outputs/${tag}.sctype.jsonl"
+  local sctype_harmonized_output="outputs/${tag}.sctype.harmonized.jsonl"
   local singler_output="outputs/${tag}.singler.jsonl"
 
   local table_args=(
@@ -90,6 +101,9 @@ write_comparison_table() {
     table_args+=(--prediction "DeepSeek LoRA rerank=${rerank_output}")
   fi
   table_args+=(--prediction "scType=${sctype_output}")
+  if [[ -f "$sctype_harmonized_output" ]]; then
+    table_args+=(--prediction "scType harmonized=${sctype_harmonized_output}")
+  fi
   if [[ -f "$singler_output" ]]; then
     table_args+=(--prediction "SingleR=${singler_output}")
   fi
@@ -123,6 +137,7 @@ for tag in pbmc3k baron_pancreas zeisel_brain; do
   for path in \
     "outputs/${tag}.sctype.raw.jsonl" \
     "outputs/${tag}.sctype.jsonl" \
+    "outputs/${tag}.sctype.harmonized.jsonl" \
     "outputs/${tag}.comparison.md" \
     "outputs/${tag}.comparison.csv" \
     "outputs/${tag}.comparison.json"; do

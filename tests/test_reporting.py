@@ -71,6 +71,7 @@ class ReportingTests(unittest.TestCase):
                     f"qwen25_7b_prompt={predictions}",
                     f"pbmc3k_matrix_singler={predictions}",
                     f"pbmc3k_matrix_sctype={predictions}",
+                    f"pbmc3k_matrix_sctype_harmonized={predictions}",
                 ],
                 preflight_specs=[f"label_overlap={preflight}"],
                 output_json=output_json,
@@ -84,6 +85,7 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(summary["predictions"][1]["method"], "Prompt-only Qwen")
         self.assertEqual(summary["predictions"][2]["method"], "SingleR")
         self.assertEqual(summary["predictions"][3]["method"], "scType")
+        self.assertEqual(summary["predictions"][4]["method"], "scType harmonized")
         self.assertEqual(summary["preflights"][0]["records"], 3)
         self.assertTrue(output_json_exists)
         self.assertTrue(output_markdown_exists)

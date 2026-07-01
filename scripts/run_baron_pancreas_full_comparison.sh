@@ -39,6 +39,8 @@ rerank_output="outputs/${TAG}.deepseek_lora_rerank.jsonl"
 singler_output="outputs/${TAG}.singler.jsonl"
 sctype_raw_output="outputs/${TAG}.sctype.raw.jsonl"
 sctype_output="outputs/${TAG}.sctype.jsonl"
+sctype_harmonized_output="outputs/${TAG}.sctype.harmonized.jsonl"
+sctype_harmonization="data/curation/${TAG}_sctype_label_harmonization.csv"
 prompt_output="outputs/${TAG}.prompt.jsonl"
 prompt_mapped_output="outputs/${TAG}.prompt.mapped.jsonl"
 
@@ -71,6 +73,14 @@ if ! is_enabled "$SKIP_SCTYPE"; then
     --marker-db "$marker_db" \
     --output "$sctype_output"
   prediction_specs+=("scType=$sctype_output")
+  if [[ -f "$sctype_harmonization" ]]; then
+    python -m deepseekcell_ft.cli harmonize-prediction-labels \
+      --predictions "$sctype_output" \
+      --mapping "$sctype_harmonization" \
+      --marker-db "$marker_db" \
+      --output "$sctype_harmonized_output"
+    prediction_specs+=("scType harmonized=$sctype_harmonized_output")
+  fi
 fi
 
 if ! is_enabled "$SKIP_SINGLER"; then

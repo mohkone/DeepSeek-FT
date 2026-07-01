@@ -39,6 +39,8 @@ def _infer_method(name: str, path: Path) -> str:
     text = f"{name} {path}".lower()
     if "sctype-style" in text or "sctype_style" in text:
         return "scType-style"
+    if "sctype_harmonized" in text or "sctype.harmonized" in text:
+        return "scType harmonized"
     if "sctype" in text:
         return "scType"
     if "singler" in text:

@@ -13,6 +13,7 @@ from deepseekcell_ft.evaluation import (
     analyze_prediction_records,
     analyze_rerank_prediction_records,
     evaluate_predictions,
+    harmonize_prediction_labels,
     map_prediction_ontology_ids,
     reparse_prediction_records,
     sync_prediction_gold_ontology_ids,
@@ -224,6 +225,71 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(summary["unmapped"], 1)
         self.assertIsNone(mapped.get("pred_cl_id"))
         self.assertEqual(mapped["pred_cl_id_source"], "unmapped_predicted_label")
+
+    def test_harmonize_prediction_labels_uses_explicit_mapping(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            predictions = tmpdir_path / "predictions.jsonl"
+            mapping = tmpdir_path / "mapping.csv"
+            marker_db = tmpdir_path / "markers.csv"
+            output = tmpdir_path / "harmonized.jsonl"
+
+            predictions.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "y_true": "CD4 T cells",
+                                "y_pred": "Naive CD4+ T cells",
+                                "true_cl_id": "CL:0000624",
+                                "pred_cl_id": None,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "y_true": "CD8 T cells",
+                                "y_pred": "CD8+ NKT-like cells",
+                                "true_cl_id": "CL:0000625",
+                                "pred_cl_id": None,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            mapping.write_text(
+                "\n".join(
+                    [
+                        "predicted_label,harmonized_label,harmonized_cl_id,notes",
+                        "Naive CD4+ T cells,CD4 T cells,CL:0000624,subtype parent",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            marker_db.write_text(
+                "\n".join(
+                    [
+                        "tissue,cell_type,cell_ontology_id,markers,source,evidence",
+                        'PBMC,CD4 T cells,CL:0000624,"CD3D,IL7R",Example,canonical',
+                        'PBMC,CD8 T cells,CL:0000625,"CD8A,CD8B",Example,canonical',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            summary = harmonize_prediction_labels(predictions, mapping, output, marker_db)
+            rows = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual(summary["harmonized"], 1)
+        self.assertEqual(summary["unchanged"], 1)
+        self.assertEqual(summary["after_accuracy"], 0.5)
+        self.assertEqual(summary["after_cell_ontology_accuracy"], 0.5)
+        self.assertEqual(rows[0]["y_pred"], "CD4 T cells")
+        self.assertEqual(rows[0]["original_y_pred"], "Naive CD4+ T cells")
+        self.assertEqual(rows[0]["pred_cl_id"], "CL:0000624")
+        self.assertEqual(rows[1]["y_pred"], "CD8+ NKT-like cells")
 
     def test_reparse_prediction_records_updates_raw_response_fields(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

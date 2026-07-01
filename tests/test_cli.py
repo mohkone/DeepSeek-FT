@@ -11,6 +11,7 @@ from deepseekcell_ft.cli import (
     benchmark_prompt_command,
     benchmark_sctype_style_command,
     build_parser,
+    harmonize_prediction_labels_command,
     reparse_predictions_command,
 )
 
@@ -51,6 +52,25 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.func, benchmark_sctype_style_command)
         self.assertEqual(args.negative_weight, 1.0)
         self.assertEqual(args.confidence_bins, 10)
+
+    def test_harmonize_prediction_labels_parser(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "harmonize-prediction-labels",
+                "--predictions",
+                "outputs/predictions.jsonl",
+                "--mapping",
+                "data/curation/pbmc3k_sctype_label_harmonization.csv",
+                "--marker-db",
+                "data/raw/pbmc3k.matrix_markers.csv",
+                "--output",
+                "outputs/predictions.harmonized.jsonl",
+            ]
+        )
+
+        self.assertEqual(args.func, harmonize_prediction_labels_command)
+        self.assertEqual(args.mapping, Path("data/curation/pbmc3k_sctype_label_harmonization.csv"))
 
     def test_reparse_predictions_parser(self) -> None:
         parser = build_parser()

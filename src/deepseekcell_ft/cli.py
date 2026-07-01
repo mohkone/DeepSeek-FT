@@ -29,6 +29,7 @@ from .evaluation import (
     analyze_prediction_records,
     analyze_rerank_prediction_records,
     evaluate_predictions,
+    harmonize_prediction_labels,
     load_prediction_records,
     map_prediction_ontology_ids,
     reparse_prediction_records,
@@ -314,6 +315,17 @@ def map_prediction_ontology_command(args: argparse.Namespace) -> int:
         marker_db_path=args.marker_db,
         output_path=args.output,
         preserve_existing=args.preserve_existing,
+    )
+    print(json.dumps(summary, indent=2, sort_keys=True, ensure_ascii=True))
+    return 0
+
+
+def harmonize_prediction_labels_command(args: argparse.Namespace) -> int:
+    summary = harmonize_prediction_labels(
+        predictions_path=args.predictions,
+        mapping_path=args.mapping,
+        output_path=args.output,
+        marker_db_path=args.marker_db,
     )
     print(json.dumps(summary, indent=2, sort_keys=True, ensure_ascii=True))
     return 0
@@ -740,6 +752,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Keep existing predicted CL IDs instead of replacing them from labels",
     )
     map_prediction_ontology.set_defaults(func=map_prediction_ontology_command)
+
+    harmonize_prediction_labels_parser = subparsers.add_parser(
+        "harmonize-prediction-labels",
+        help="Rewrite prediction labels from an explicit harmonization CSV",
+    )
+    harmonize_prediction_labels_parser.add_argument("--predictions", required=True, type=Path)
+    harmonize_prediction_labels_parser.add_argument("--mapping", required=True, type=Path)
+    harmonize_prediction_labels_parser.add_argument("--output", required=True, type=Path)
+    harmonize_prediction_labels_parser.add_argument(
+        "--marker-db",
+        type=Path,
+        help="Optional marker DB used to fill harmonized CL IDs from target labels",
+    )
+    harmonize_prediction_labels_parser.set_defaults(func=harmonize_prediction_labels_command)
 
     reparse_predictions = subparsers.add_parser(
         "reparse-predictions",
